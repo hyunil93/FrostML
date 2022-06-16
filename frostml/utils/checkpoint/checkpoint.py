@@ -1,53 +1,51 @@
-from typing import Dict, Optional, Union
+from typing import *
 
 import warnings
-import copy
 import os.path
 import shutil
-import numpy as np
-import torch
+import secrets
 
 
-def check_checkpoint_path_redundancy(path):
-    if os.path.exists(path):
-        warnings.warn('The checkpoint already exists on the same path.')
+def _warn_checkpoint_path_redundancy(p: Union[str, os.PathLike]) -> None:
+    if os.path.exists(p):
+        warnings.warn('Warning :: the checkpoint path already exists\n'
+                      'If continue, your previous runs may be overwritten\n'
+                      'You can use `use_unique_id=True` to avoid checkpoint crashes\n')
 
 
-def save_checkpoint_sync(path, ckpt, f) -> None:
-    torch.save(ckpt, os.path.join(path, f))
+def _initiate_checkpoint_path(p: Union[str, os.PathLike], force_rm: bool = False) -> None:
+    if os.path.exists(p):
+        if force_rm:
+            shutil.rmtree(p)
+    if not os.path.exists(p):
+        os.makedirs(p)
 
 
 class CKPT:
 
+    unique_id = secrets.token_hex(4)
     base_folder = 'checkpoint'
 
-    def __init__(self, dirs: Union[str, os.PathLike], ckpt: Dict, last_epoch: int = -1) -> None:
-        r"""
+    def __init__(
+            self, f, ckpt,
+            *,
+            last_global_step: int = -1,
+            use_unique_id: bool = False,
+            remove_previous_runs: bool = False,
+    ) -> None:
+        if use_unique_id:
+            self.base_folder = f'{self.base_folder}.{self.unique_id}'
 
-        Args:
-            dirs: ...
-            ckpt: ...
-            last_epoch: ...
-        """
-        self.path = os.path.join(dirs, self.base_folder)
-        self.ckpt = ckpt
-        self.last_epoch = last_epoch
+        self.f = os.path.join(f, self.base_folder)
+        self.checkpoint = ckpt
+        self.last_global_step = last_global_step
 
-        if os.path.exists(self.path):
-            warnings.warn('')
-            proceed = input('Proceed? [y/N]: ')
-            proceed = True if proceed.lower() == 'y' else False
-            if proceed:
-                shutil.rmtree(self.path)
-            else:
-                pass
+        _warn_checkpoint_path_redundancy(f)
+        _initiate_checkpoint_path(f, force_rm=remove_previous_runs)
 
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
+    def step(self, global_step: Optional[int] = None) -> None:
+        global_step = self.last_global_step + 1 if global_step is None else global_step
 
-    def step(self, epoch: Optional[int] = None) -> None:
-        epoch = self.last_epoch + 1 if epoch is None else epoch
-        snapshot = dict(epoch=epoch)
-        snapshot.update(copy.deepcopy(self.ckpt))  # make snapshot of checkpoint
-        save_checkpoint_sync(self.path, snapshot, f'checkpoint_epoch_{epoch}.pth')
-        self.last_epoch = np.floor(epoch)
+        # save checkpoint...
+
+        self.last_global_step = int(global_step)
