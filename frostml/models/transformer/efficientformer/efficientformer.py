@@ -1,10 +1,8 @@
 from typing import Any, List, Type, Union
 
-import torch
-
 from torch import Tensor
-from torch.nn import Module, AdaptiveAvgPool1d, AvgPool2d, BatchNorm2d, Conv2d, \
-    Dropout, GELU, Identity, LayerNorm, Linear, MultiheadAttention, Sequential
+from torch.nn import Module, AvgPool2d, BatchNorm2d, Conv2d, Dropout, \
+    GELU, Identity, LayerNorm, Linear, MultiheadAttention, Sequential
 
 
 class PoolMixer(Module):
