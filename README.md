@@ -1,18 +1,18 @@
 # FrostML
-`
+```
   import torch
   from segmentation_model.backbone import *
 
-  //'EfficientNet'
-  //'ReResSegNet'
-  //'EfficientFormer'
-  //'volo'
-  //'MobileNet'
-  //'MAE_ViT'
-  //'Wide_ResNet'
-  //'UNet'
-  //'resnet_18'
-  //'resnet_50'
+  #'EfficientNet'
+  #'ReResSegNet'
+  #'EfficientFormer'
+  #'volo'
+  #'MobileNet'
+  #'MAE_ViT'
+  #'Wide_ResNet'
+  #'UNet'
+  #'resnet_18'
+  #'resnet_50'
 
   net = load_model("EfficientNet", num_classes=1000, img_size=704, pretrained=False)
 
@@ -20,4 +20,4 @@
   output = net(img)
 
   print(f"debug")
-`
+```
